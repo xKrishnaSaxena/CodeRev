@@ -7,9 +7,10 @@ class RouteDecision(str,Enum):
     SKIP="skip"
 
 class State(TypedDict):
-    raw_code:str
-    issues_list = List[Dict[str, Any]]
-    agent_feedback=Dict[str, Any]
-    route_decision=RouteDecision
-    language:str
-    context:str
+    raw_code: str
+    language: str
+    context: str
+    detected_issues: List[Dict[str, Any]] 
+    agent_feedback: Dict[str, Any]         
+    route_decision: RouteDecision          
+    final_report: Dict[str, Any]

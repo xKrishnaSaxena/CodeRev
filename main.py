@@ -3,18 +3,58 @@ from pydantic import BaseModel
 from langgraph.graph import StateGraph,END
 from state import State,RouteDecision
 from agents.router import router
+from agents.performance import performance
+from agents.security import security
+from agents.syntax import syntax
+from agents.final_synthesis import synthesis
 from fastapi.responses import HTMLResponse
 class Code(BaseModel):
-    code_snippet:str
-    language:str
-    context:str
+    code_snippet: str
+    language: str
+    context: str
 
 app = FastAPI()
 
 graph=StateGraph(State)
+
 graph.add_node("router",router)
+graph.add_node("syntax",syntax)
+graph.add_node("security",security)
+graph.add_node("performance",performance)
+graph.add_node("synthesis",synthesis)
+
 graph.set_entry_point("router")
-graph.add_edge("router",END)
+
+def route_cond(state:State) -> str:
+    decision=state.get("route_decision")
+    if decision == RouteDecision.SKIP:
+        return "synthesis"
+    elif decision == RouteDecision.SYNTAX_ONLY:
+        return "syntax"
+    elif decision == RouteDecision.SECURITY_FIRST:
+        return "security"
+    else:
+        return "syntax"
+    
+graph.add_conditional_edges(
+    "router",
+    route_cond,
+    {
+        "syntax": "syntax",  
+        "security": "security",
+        "synthesis": "synthesis"
+    }
+)
+
+graph.add_conditional_edges(
+    "syntax",
+    lambda state: "performance" if any(issue["type"] == "perf_risk" for issue in state["detected_issues"]) else "synthesis",
+    {"performance": "performance", "synthesis": "synthesis"}
+)
+
+graph.add_edge("security", "synthesis")
+graph.add_edge("performance", "synthesis")
+graph.add_edge("synthesis", END)
 
 main_graph=graph.compile()
 
@@ -32,8 +72,10 @@ async def code_review(code:Code):
         "agent_feedback":{},
         "route_decision":RouteDecision.SKIP
     }
+    print(initialState)
     res=await main_graph.ainvoke(initialState)
-
+    print("RESPONNNNNSEEE")
+    print(res)
     return res
 
 
