@@ -2,3 +2,7 @@ fastapi[standard]
 pydantic
 langgraph
 langchain_google_genai
+langchain_community
+langchain
+pypdf
+faiss-cpu
