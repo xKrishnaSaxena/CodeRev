@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from langgraph.graph import StateGraph, END
 from state import State, RouteDecision
@@ -22,6 +23,17 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",  # Vite dev server (adjust port if different)
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",  # Common React dev port, if needed
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows GET, POST, OPTIONS, etc.
+    allow_headers=["*"],  # Allows all headers (e.g., Content-Type)
+)
 
 graph = StateGraph(State)
 

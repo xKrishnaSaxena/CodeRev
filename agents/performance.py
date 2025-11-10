@@ -2,7 +2,7 @@ from state import State
 from llm import llm
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from vector_store import retriever
+import vector_store
 
 def performance(state: State) -> State:
     raw_code = state['raw_code']
@@ -11,7 +11,7 @@ def performance(state: State) -> State:
 
     prior_types = [issue.get('type', 'unknown') for issue in detected_issues[:2]]
     query = f"performance optimizations for {language} code: Big-O analysis, efficient data structures for {', '.join(prior_types)}"
-    rag_docs = retriever.get_relevant_documents(query)
+    rag_docs = vector_store.retriever.invoke(query)
     rag_context = "\n".join([doc.page_content for doc in rag_docs])
 
     performance_prompt = ChatPromptTemplate.from_template(

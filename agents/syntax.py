@@ -2,7 +2,7 @@ from state import State
 from llm import llm
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
-from vector_store import retriever 
+import vector_store
 
 def syntax(state: State) -> State:
     raw_code = state['raw_code']
@@ -11,7 +11,7 @@ def syntax(state: State) -> State:
 
     prior_types = [issue.get('type', 'unknown') for issue in detected_issues[:2]]
     query = f"style guidelines for {language} code (e.g., PEP8 indentation, naming conventions)"
-    rag_docs = retriever.get_relevant_documents(query)
+    rag_docs = vector_store.retriever.invoke(query)
     rag_context = "\n".join([doc.page_content for doc in rag_docs])
 
     syntax_prompt = ChatPromptTemplate.from_template(
